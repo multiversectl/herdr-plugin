@@ -1,7 +1,7 @@
 name: Release
 
-# Every push to main is released from its commit messages (conventional
-# commits): a fix is a patch, a feat a minor version. The release writes the
+# Every push to main is released as a patch version (0.0.x), from its
+# conventional commit messages (fix: …). The release writes the
 # version into herdr-plugin.toml, which herdr shows and `herdr plugin update`
 # compares, commits it, and tags it, so `herdr plugin install --ref vX.Y.Z`
 # pins a version.

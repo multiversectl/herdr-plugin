@@ -1,6 +1,6 @@
 id = "multiversectl"
 name = "multiversectl"
-version = "0.1.0"
+version = "0.0.0"
 min_herdr_version = "0.9.0"
 description = "Opens each multiversectl universe as a herdr workspace in the universe's folder, labels agents with their universe and repository, and shows universe status."
 platforms = ["linux", "macos"]

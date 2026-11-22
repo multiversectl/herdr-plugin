@@ -85,8 +85,8 @@ herdr plugin action invoke multiversectl.debug   # writes what herdr passes the 
 
 ## Versions
 
-Every merge to `main` is released by [semantic-release](https://semantic-release.gitbook.io) from its commit messages (`fix:` a patch, `feat:` a minor version). The release writes the version into `herdr-plugin.toml` and tags it, so you can pin one:
+Every merge to `main` is released by [semantic-release](https://semantic-release.gitbook.io) as a patch version (0.0.1, 0.0.2, …); commits are titled `fix: …`. The release writes the version into `herdr-plugin.toml` and tags it, so you can pin one:
 
 ```sh
-herdr plugin install multiversectl/herdr-plugin --ref v0.1.1
+herdr plugin install multiversectl/herdr-plugin --ref v0.0.1
 ```
