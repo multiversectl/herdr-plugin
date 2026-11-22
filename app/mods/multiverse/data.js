@@ -116,9 +116,36 @@ export async function webView() {
   }
 }
 
-export async function urls(u) {
-  const out = await mvctl(["universe", "urls", u.name, "-m", u.multiverse]);
-  return out.split("\n").map((l) => l.trim()).filter((l) => /^https?:\/\//.test(l));
+// Every address of a universe's services, from `universe ls <universe> -o
+// json,wide`: which app, host and service it is, whether that service runs,
+// and how it is reached. "name": a hostname through multiversectl's proxy;
+// "ip": a forwarded port on this machine's address, which other devices on
+// the network reach too.
+export async function addresses(u) {
+  const ls = JSON.parse(await mvctl(["universe", "ls", u.name, "-o", "json,wide", "-m", u.multiverse]));
+  const w = (ls.universes ?? [])[0];
+  const out = [];
+  for (const app of w?.apps ?? []) {
+    const state = {};
+    for (const svc of app.services ?? []) state[svc.name] = svc.state;
+    for (const h of app.urls ?? []) {
+      out.push({
+        app: app.key,
+        host: String(h.host ?? "").replace(/:forward$/, ""),
+        service: h.service,
+        url: h.url,
+        kind: byIP(h.url) ? "ip" : "name",
+        running: state[h.service] === "running",
+      });
+    }
+  }
+  return out;
+}
+
+// An address whose host is an IP literal is a forwarded port.
+function byIP(url) {
+  const host = String(url).replace(/^[a-z]+:\/\//, "").replace(/\/.*$/, "").replace(/:\d+$/, "");
+  return /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.startsWith("[");
 }
 
 export function browse(url) {

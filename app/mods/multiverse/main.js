@@ -10,7 +10,7 @@
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
 import { theme, checking, props, closeOverlay } from "herdr";
-import { ICON, tone, universes, key, spaceOf, current, open, showRepo, act, urls, browse, doctor, universeTerminal, webView } from "./data.js";
+import { ICON, tone, universes, key, spaceOf, current, open, showRepo, act, addresses, browse, doctor, universeTerminal, webView } from "./data.js";
 
 // How often the list is read again: universes start and stop outside Herdr.
 const EVERY = 10000;
@@ -22,7 +22,8 @@ export default class Universes extends View {
     this.list = null; // null: not read yet
     this.error = null;
     this.busy = {}; // universe key -> the verb running
-    this.links = {}; // universe key -> its URLs
+    this.links = {}; // universe key -> { at: state when read, list: its addresses } (list null: reading)
+    this.linkTab = {}; // universe key -> the addresses tab shown
     if (checking()) return;
     this.refresh(cx);
     cx.timer.every(EVERY, (cx) => this.refresh(cx));
@@ -73,15 +74,17 @@ export default class Universes extends View {
     });
   }
 
+  // The card's addresses, read again when the universe's state has moved.
   loadLinks(cx, u) {
     const k = key(u);
-    if (k in this.links) return;
-    this.links[k] = null;
+    const at = `${u.state} ${u.up}`;
+    if (this.links[k] && this.links[k].at === at) return;
+    this.links[k] = { at, list: this.links[k]?.list ?? null };
     cx.spawn(async (cx) => {
       try {
-        this.links[k] = await urls(u);
+        this.links[k] = { at, list: await addresses(u) };
       } catch {
-        this.links[k] = [];
+        this.links[k] = { at, list: [] };
       }
       cx.notify();
     });
@@ -103,7 +106,7 @@ export default class Universes extends View {
         .child(div().id("mv-refresh").text_size(12).text_color(t.dim).px(6).rounded(4)
           .hover((s) => s.bg(t.hover).text_color(t.foreground))
           .tooltip("Read the universes again")
-          .on_click((_e, cx) => this.refresh(cx))
+          .on_click((_e, cx) => { this.links = {}; this.refresh(cx); })
           .child(this.reading ? div().frames(SPIN, 90) : "↻")));
 
     let body;
@@ -143,7 +146,6 @@ export default class Universes extends View {
         .when(Boolean(busy), (el) => el.opacity(0.5))
         .child(label);
 
-    const links = this.links[k];
     return v_flex().mx(10).p(12).gap(10).rounded(10).bg(t.background).border(1).border_color(t.border)
       .child(h_flex().gap(8).items_center()
         .child(div().text_size(16).text_color(tone(t, u.state)).child(ICON[u.state] ?? "◌"))
@@ -163,17 +165,57 @@ export default class Universes extends View {
         .child(h_flex().flex_wrap().gap(4)
           .child(this.opener(t, u, "universe", "universe", activeTab, () => universeTerminal(u), "the universe's folder"))
           .children(u.repos.map((r) => this.opener(t, u, `r-${r}`, r, activeTab, () => showRepo(u, r), r)))))
-      .child(v_flex().gap(2)
-        .child(div().text_size(11).text_color(t.dim).child("ADDRESSES"))
-        .children(links === null || links === undefined
-          ? [div().text_size(12).text_color(t.dim).child("…")]
-          : links.length === 0
-            ? [div().text_size(12).text_color(t.dim).child("none")]
-            : links.map((url, i) =>
-              div().id(`mv-url-${i}`).text_size(12).text_color(t.accent).truncate()
-                .hover((s) => s.underline())
-                .on_click(() => browse(url))
-                .child(url.replace(/^https?:\/\//, "")))));
+      .child(this.addressesView(t, u));
+  }
+
+  // The universe's addresses, a tab per way of reaching them: by name through
+  // the proxy, or by IP and port (from other devices too). Each says which
+  // host and service it is, and whether that service runs.
+  addressesView(t, u) {
+    const k = key(u);
+    const list = this.links[k]?.list;
+    const title = div().text_size(11).text_color(t.dim).child("ADDRESSES");
+    if (!list) return v_flex().gap(4).child(title).child(div().text_size(12).text_color(t.dim).child("…"));
+    if (list.length === 0) return v_flex().gap(4).child(title).child(div().text_size(12).text_color(t.dim).child("none"));
+
+    const kinds = [
+      { id: "name", label: "By name", tip: "Through multiversectl's proxy, by hostname" },
+      { id: "ip", label: "By IP", tip: "A port on this machine's address: other devices on the network reach it too" },
+    ].map((x) => ({ ...x, list: list.filter((a) => a.kind === x.id) }));
+    const shown = kinds.find((x) => x.id === this.linkTab[k]) ?? kinds.find((x) => x.list.length > 0);
+    const empty = {
+      name: "No host is reached by name: each one is a forwarded port (portForward: only).",
+      ip: "No host has a forwarded port: each one is reached by name, through the proxy.",
+    };
+
+    const tabs = h_flex().gap(2).p(2).rounded(6).bg(t.raised).children(kinds.map((x) => {
+      const on = x.id === shown.id;
+      return h_flex().id(`mv-at-${x.id}`).px(8).h(22).gap(5).items_center().rounded(4).text_size(12)
+        .bg(on ? t.background : t.raised).text_color(on ? t.foreground : x.list.length ? t.muted : t.dim)
+        .when(on, (el) => el.border(1).border_color(t.border))
+        .hover((s) => s.text_color(t.foreground))
+        .tooltip(x.tip)
+        .on_click((_e, cx) => { this.linkTab[k] = x.id; cx.notify(); })
+        .child(x.label)
+        .child(div().text_size(11).text_color(t.dim).child(String(x.list.length)));
+    }));
+
+    const rows = shown.list.map((a, i) =>
+      h_flex().id(`mv-url-${shown.id}-${i}`).gap(8).items_center().py(3).px(4).rounded(5)
+        .hover((s) => s.bg(t.hover))
+        .tooltip(a.running ? `Open ${a.url}` : `${a.app}/${a.service} is not running: ${a.url}`)
+        .on_click(() => browse(a.url))
+        .child(div().flex_none().size(6).rounded(3).bg(a.running ? t.done : t.dim))
+        .child(v_flex().flex_1().min_w(0)
+          .child(h_flex().gap(6).items_center()
+            .child(div().text_size(12).font_semibold().text_color(a.running ? t.foreground : t.muted).child(a.host))
+            .child(div().text_size(11).text_color(t.dim).truncate().child(`${a.app} · ${a.service}`)))
+          .child(div().text_size(12).truncate().text_color(a.running ? t.accent : t.dim).child(a.url.replace(/^https?:\/\//, "")))));
+
+    return v_flex().gap(6)
+      .child(h_flex().justify_between().items_center().child(title).child(tabs))
+      .child(div().text_size(11).text_color(t.dim).child(shown.list.length ? shown.tip : empty[shown.id]))
+      .child(v_flex().gap(1).children(rows));
   }
 
   // A chip that opens a terminal, or goes to the one open: the terminal icon,
