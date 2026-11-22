@@ -84,6 +84,18 @@ export function showRepo(u, repo) {
   else run("tab.new", { name: repo, folder: u.checkout[repo] });
 }
 
+// The universe's own terminal: a tab named "universe" in its folder, the one
+// holding every repository's checkout. One already open is shown.
+export function universeTerminal(u) {
+  const s = spaceOf(u);
+  if (s) {
+    run("space.select", { id: s.id });
+    const tab = s.tabs.find((t) => t.name === "universe");
+    if (tab) return run("tab.select", { id: tab.id });
+  }
+  run("tab.new", { name: "universe", space: s?.id, folder: u.dir });
+}
+
 // Runs `multiversectl universe <verb> <universe>` and says how it went.
 export async function act(u, verb) {
   const args = ["universe", verb, u.name, "-m", u.multiverse];

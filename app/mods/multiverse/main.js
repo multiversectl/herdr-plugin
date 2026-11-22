@@ -9,7 +9,7 @@
 import { View, div } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
 import { theme, checking, props, closeOverlay } from "herdr";
-import { ICON, tone, universes, key, spaceOf, current, open, showRepo, act, urls, browse, doctor } from "./data.js";
+import { ICON, tone, universes, key, spaceOf, current, open, showRepo, act, urls, browse, doctor, universeTerminal } from "./data.js";
 
 // How often the list is read again: universes start and stop outside Herdr.
 const EVERY = 10000;
@@ -136,7 +136,8 @@ export default class Universes extends View {
         .child(button("up", "▶ Up", (_e, cx) => this.run(cx, u, "up"), u.state !== "running"))
         .child(button("down", "■ Down", (_e, cx) => this.run(cx, u, "down")))
         .child(button("sync", "⟳ Sync", (_e, cx) => this.run(cx, u, "sync")))
-        .child(button("doctor", "Doctor", () => doctor(u))))
+        .child(button("doctor", "Doctor", () => doctor(u)))
+        .child(button("terminal", "› Terminal", () => universeTerminal(u))))
       .child(v_flex().gap(4)
         .child(div().text_size(11).text_color(t.dim).child("REPOSITORIES"))
         .child(h_flex().flex_wrap().gap(4).children(u.repos.map((r) =>
