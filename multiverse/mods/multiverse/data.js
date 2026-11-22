@@ -6,6 +6,22 @@ import { exec, spaces, panes, focused, run, window, notify } from "herdr";
 
 export const ICON = { running: "●", partial: "◐", stopped: "○", created: "◌" };
 
+// The gems (gems/*.svg, drawn by tools/gems.mjs): a repository is a stone, its
+// colour from its name, so a repository has the same one in every universe; a
+// universe, made of repositories, is the ring of them all. The web view
+// (multiversectl server open) picks colours the same way.
+const GEMS = ["red", "blue", "yellow", "green", "purple", "orange"];
+export const RING = "mods/multiverse/gems/ring.svg";
+export function gemOf(name) {
+  let h = 0x811c9dc5;
+  for (const ch of new TextEncoder().encode(name)) h = Math.imul(h ^ ch, 0x01000193) >>> 0;
+  return `mods/multiverse/gems/${GEMS[h % GEMS.length]}.svg`;
+}
+// How bright a universe's ring shows: lit when it runs, dim when it does not.
+export function glow(state) {
+  return state === "running" ? 1 : state === "partial" ? 0.75 : 0.4;
+}
+
 export function tone(t, state) {
   if (state === "running") return t.done;
   if (state === "partial") return t.working;
