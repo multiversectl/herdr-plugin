@@ -6,34 +6,15 @@ import { exec, spaces, panes, focused, run, window, notify } from "herdr";
 
 export const ICON = { running: "●", partial: "◐", stopped: "○", created: "◌" };
 
-// The gems (gems/*.svg, drawn by tools/gems.mjs): a repository is a stone, its
-// colour from its name, so a repository has the same one in every universe; a
-// universe, made of repositories, is the ring of them all. The web view
-// (multiversectl server open) picks colours the same way.
-const GEMS = ["red", "blue", "yellow", "green", "purple", "orange"];
-export const RING = "mods/multiverse/gems/ring.svg";
-export function gemOf(name) {
-  let h = 0x811c9dc5;
-  for (const b of utf8(name)) h = Math.imul(h ^ b, 0x01000193) >>> 0;
-  return `mods/multiverse/gems/${GEMS[h % GEMS.length]}.svg`;
-}
-// The UTF-8 bytes of s, as the web view's TextEncoder gives them (herdr's
-// scripts have no TextEncoder).
-function utf8(s) {
-  const out = [];
-  for (const ch of s) {
-    const c = ch.codePointAt(0);
-    if (c < 0x80) out.push(c);
-    else if (c < 0x800) out.push(0xc0 | (c >> 6), 0x80 | (c & 63));
-    else if (c < 0x10000) out.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
-    else out.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 63), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
-  }
-  return out;
-}
-
-// How bright a universe's ring shows: lit when it runs, dim when it does not.
-export function glow(state) {
-  return state === "running" ? 1 : state === "partial" ? 0.75 : 0.4;
+// The gems (gems/*.svg, drawn by multiversectl's web/tools/gems.mjs, which the
+// web view of `multiversectl server open` shows too): a repository's colour is
+// its place among its multiverse's repositories, sorted, so it is the same in
+// every universe and in the web view; a universe is the ring of its
+// repositories' gems.
+const GEMS = ["red", "blue", "yellow", "green", "purple", "cyan"];
+export function gem(u, repo) {
+  const i = u.all.indexOf(repo);
+  return `mods/multiverse/gems/${GEMS[(i < 0 ? 0 : i) % GEMS.length]}-sm.svg`;
 }
 
 export function tone(t, state) {
@@ -55,6 +36,8 @@ export async function universes() {
   for (const mv of st.multiverses ?? []) {
     if (mv.error) continue;
     const ls = JSON.parse(await mvctl(["universe", "ls", "-o", "json", "-m", mv.name]));
+    // Every repository of the multiverse, from its manifest: their order gives each its gem.
+    const all = Object.keys(ls.multiverse?.clones ?? {}).sort();
     for (const u of ls.universes ?? []) {
       out.push({
         multiverse: mv.name,
@@ -63,6 +46,7 @@ export async function universes() {
         up: u.up,
         dir: u.dir,
         repos: Object.keys(u.checkout ?? {}).sort(),
+        all,
         checkout: u.checkout ?? {},
         branch: Object.values(u.branch ?? {})[0] ?? null,
       });

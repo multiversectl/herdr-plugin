@@ -10,11 +10,28 @@
 import { View, div, svg, image } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
 import { theme, checking, props, closeOverlay } from "herdr";
-import { ICON, RING, gemOf, glow, tone, universes, key, spaceOf, current, open, showRepo, act, addresses, browse, doctor, universeTerminal, webView } from "./data.js";
+import { ICON, gem, tone, universes, key, spaceOf, current, open, showRepo, act, addresses, browse, doctor, universeTerminal, webView } from "./data.js";
 
 // How often the list is read again: universes start and stop outside Herdr.
 const EVERY = 10000;
 const SPIN = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+// A universe: its repositories' gems in a ring, size px across, dim when it
+// does not run. A pair sits side by side; one alone fills it.
+function ring(u, size) {
+  const n = u.repos.length;
+  const box = div().relative().size(size).flex_none().opacity(u.state === "running" ? 1 : u.state === "partial" ? 0.8 : 0.45);
+  if (n === 0) return box;
+  if (n === 1) return box.child(image(gem(u, u.repos[0])).absolute().left(size * 0.1).top(size * 0.1).size(size * 0.8));
+  const s = Math.round(size * (n === 2 ? 0.52 : n <= 4 ? 0.46 : 0.4));
+  const r = (size - s) / 2;
+  const start = n === 2 ? Math.PI : -Math.PI / 2;
+  return box.children(u.repos.map((repo, i) => {
+    const a = start + (i * 2 * Math.PI) / n;
+    return image(gem(u, repo)).absolute().size(s)
+      .left(Math.round(size / 2 + r * Math.cos(a) - s / 2)).top(Math.round(size / 2 + r * Math.sin(a) - s / 2));
+  }));
+}
 
 export default class Universes extends View {
   init(_props, cx) {
@@ -148,7 +165,7 @@ export default class Universes extends View {
 
     return v_flex().mx(10).p(12).gap(10).rounded(10).bg(t.background).border(1).border_color(t.border)
       .child(h_flex().gap(8).items_center()
-        .child(image(RING).size(28).flex_none().opacity(glow(u.state)))
+        .child(ring(u, 30))
         .child(v_flex().flex_1().min_w(0)
           .child(div().font_semibold().truncate().child(u.name))
           .child(div().text_size(11).text_color(t.dim).truncate()
@@ -234,7 +251,10 @@ export default class Universes extends View {
       .hover((s) => s.bg(shown ? t.accent : t.hover).text_color(shown ? t.accent_foreground : t.foreground))
       .tooltip(tab ? `Go to ${name === "universe" ? "the universe's" : `${name}'s`} terminal` : `Open a terminal in ${where}`)
       .on_click(onClick)
-      .child(image(name === "universe" ? RING : gemOf(name)).size(14).flex_none())
+      // On the accent a gem sits on a light disc, or its colour is lost.
+      .child(name === "universe"
+        ? div().p(shown ? 1 : 0).rounded(9).when(shown, (el) => el.bg(t.background)).child(ring(u, 15))
+        : div().p(shown ? 1 : 0).rounded(7).when(shown, (el) => el.bg(t.background)).child(image(gem(u, name)).size(12)))
       .child(div().when(name === "universe", (el) => el.font_semibold()).child(name))
       .when(!tab, (el) => el.child(div().text_size(11).text_color(t.dim).child("+")));
   }
@@ -261,10 +281,9 @@ export default class Universes extends View {
       .when(shown, (el) => el.bg(t.selected))
       .hover((s) => s.bg(shown ? t.selected : t.hover))
       .on_click(() => { this.done(); open(u); })
-      .child(image(RING).size(18).flex_none().opacity(glow(u.state)))
+      .child(ring(u, 20))
       .child(div().flex_1().truncate().text_color(space ? t.foreground : t.muted).child(u.name))
-      .child(div().flex_none().text_size(11).text_color(t.dim).child(space ? "open" : u.up ?? ""))
-      .child(div().id(`mv-st-${k}`).flex_none().text_size(10).text_color(tone(t, u.state)).tooltip(u.state).child(ICON[u.state] ?? "◌"));
+      .child(div().flex_none().text_size(11).text_color(t.dim).child(space ? "open" : u.up ?? ""));
     if (!space || this.panel) return row;
 
     // In the popup, an open universe lists its repositories.
@@ -277,7 +296,7 @@ export default class Universes extends View {
           .hover((s) => s.text_color(t.foreground))
           .tooltip(space.tabs.some((x) => x.name === r) ? `Go to ${r}'s terminal` : `Open a terminal in ${r}`)
           .on_click(() => { this.done(); showRepo(u, r); })
-          .child(image(gemOf(r)).size(12).flex_none())
+          .child(image(gem(u, r)).size(12).flex_none())
           .child(r)));
     return v_flex().child(row).child(repos);
   }
