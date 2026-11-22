@@ -33,11 +33,11 @@ jobs:
           shellcheck --shell=sh build.sh run.sh
 
       # The herdr app layout: every file it names is here.
-      - name: app/
+      - name: multiverse/ (the herdr app layout)
         run: |
           python3 - <<'PY'
           import json, os, re
-          layout = json.load(open("app/layouts/multiverse.json"))
+          layout = json.load(open("multiverse/layouts/multiverse.json"))
           mods = set()
           def walk(n):
               c = n.get("content") or {}
@@ -46,12 +46,15 @@ jobs:
           walk(layout)
           shipped = {"workspace-chrome", "spaces", "agents", "files", "changes", "workspace-status"}
           for m in mods - shipped:
-              assert os.path.isfile(f"app/mods/{m}/main.js"), f"layout names mods/{m}, which is not in app/mods"
-          for root, _, files in os.walk("app/mods"):
+              assert os.path.isfile(f"multiverse/mods/{m}/main.js"), f"layout names mods/{m}, which is not in multiverse/mods"
+          for root, _, files in os.walk("multiverse/mods"):
               for f in files:
                   if f.endswith(".js"):
                       for ref in re.findall(r'"(mods/multiverse[^"]*\.svg)"', open(os.path.join(root, f)).read()):
-                          assert os.path.isfile(f"app/{ref}"), f"{f} uses {ref}, which is missing"
-          json.load(open("app/keys.json"))
+                          assert os.path.isfile(f"multiverse/{ref}"), f"{f} uses {ref}, which is missing"
+          json.load(open("multiverse/keys.json"))
+          # What the layout gallery (herdr.dev/layouts) shows: the recipe and its preview.
+          for f in ("RECIPE.md", "preview.png"):
+              assert os.path.isfile(f"multiverse/{f}"), f"multiverse/{f} is missing"
           print("layout mods:", sorted(mods))
           PY

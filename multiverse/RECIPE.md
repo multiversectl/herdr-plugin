@@ -2,6 +2,8 @@
 
 Herdr's main layout with a **Universes** side panel for [multiversectl](https://multiversectl.dev): every universe on this machine, each opened as its own space whose terminal starts in the universe's folder, and the universe you are in with its state, repositories, addresses and controls. The + menu gains **Open universe…** and `alt-u` opens a universe picker anywhere.
 
+![Multiverse](preview.png)
+
 **What you see**
 
 - Everything of Herdr's `main` layout, unchanged, plus a third side panel beside Files and Changes. Its button in the tab bar reads **Universes**, with an orbit icon (`mods/multiverse/universe.svg`, 16px, stroked in the text color).
@@ -23,7 +25,7 @@ Herdr's main layout with a **Universes** side panel for [multiversectl](https://
 - Doctor opens a tab named `doctor` in the universe's space running `multiversectl universe doctor`, which waits for enter before it closes.
 - Web view runs `multiversectl server open`, which starts the web view when it is not running and opens it in the browser; an error shows as a toast.
 - The addresses come from `multiversectl universe ls <universe> -o json,wide -m <multiverse>` (each app's `urls`: host, service, url; each service's `state`). One whose host is an IP literal is By IP, any other By name. They are read when the card shows and again when the universe's state or services up change, or on ↻. The tab shown is the one last picked, else the first with addresses.
-- An address opens in the browser (`xdg-open`, or `open` on macOS).
+- An address opens in the browser: `open` on macOS; on Linux `xdg-open`, else `gio open`, else `sensible-browser`, and a warning toast when none works.
 - The list is read on start, every 10 seconds, and on ↻. The panel keeps Herdr's per-space memory: each space remembers whether its side panel was open and which one.
 
 **Built from**
