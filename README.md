@@ -82,3 +82,11 @@ cd ../multiversectl && make install   # puts multiversectl and multiversectl-her
 herdr plugin link .                    # use this checkout; no build step runs
 herdr plugin action invoke multiversectl.debug   # writes what herdr passes the plugin to debug.json
 ```
+
+## Versions
+
+Every merge to `main` is released by [semantic-release](https://semantic-release.gitbook.io) from its commit messages (`fix:` a patch, `feat:` a minor version). The release writes the version into `herdr-plugin.toml` and tags it, so you can pin one:
+
+```sh
+herdr plugin install multiversectl/herdr-plugin --ref v0.1.1
+```

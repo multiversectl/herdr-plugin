@@ -1,0 +1,36 @@
+name: Release
+
+# Every push to main is released from its commit messages (conventional
+# commits): a fix is a patch, a feat a minor version. The release writes the
+# version into herdr-plugin.toml, which herdr shows and `herdr plugin update`
+# compares, commits it, and tags it, so `herdr plugin install --ref vX.Y.Z`
+# pins a version.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: cycjimmy/semantic-release-action@v4
+        with:
+          extra_plugins: |
+            conventional-changelog-conventionalcommits@8
+            @semantic-release/exec@6
+            @semantic-release/git@10
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
