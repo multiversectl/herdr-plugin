@@ -6,6 +6,17 @@ import { exec, spaces, panes, focused, run, window, notify } from "herdr";
 
 export const ICON = { running: "●", partial: "◐", stopped: "○", created: "◌" };
 
+// The gems (gems/*.svg, drawn by multiversectl's web/tools/gems.mjs, which the
+// web view of `multiversectl server open` shows too): a repository's colour is
+// its place among its multiverse's repositories, sorted, so it is the same in
+// every universe and in the web view; a universe is the ring of its
+// repositories' gems.
+const GEMS = ["red", "blue", "yellow", "green", "purple", "cyan"];
+export function gem(u, repo) {
+  const i = u.all.indexOf(repo);
+  return `mods/multiverse/gems/${GEMS[(i < 0 ? 0 : i) % GEMS.length]}-sm.svg`;
+}
+
 export function tone(t, state) {
   if (state === "running") return t.done;
   if (state === "partial") return t.working;
@@ -25,6 +36,8 @@ export async function universes() {
   for (const mv of st.multiverses ?? []) {
     if (mv.error) continue;
     const ls = JSON.parse(await mvctl(["universe", "ls", "-o", "json", "-m", mv.name]));
+    // Every repository of the multiverse, from its manifest: their order gives each its gem.
+    const all = Object.keys(ls.multiverse?.clones ?? {}).sort();
     for (const u of ls.universes ?? []) {
       out.push({
         multiverse: mv.name,
@@ -33,6 +46,7 @@ export async function universes() {
         up: u.up,
         dir: u.dir,
         repos: Object.keys(u.checkout ?? {}).sort(),
+        all,
         checkout: u.checkout ?? {},
         branch: Object.values(u.branch ?? {})[0] ?? null,
       });

@@ -7,14 +7,31 @@
 // named after it with one terminal in the universe's folder; a repository's tab
 // opens from its chip. One already open is shown.
 
-import { View, div, svg } from "gpui-kit";
+import { View, div, svg, image } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
 import { theme, checking, props, closeOverlay } from "herdr";
-import { ICON, tone, universes, key, spaceOf, current, open, showRepo, act, addresses, browse, doctor, universeTerminal, webView } from "./data.js";
+import { ICON, gem, tone, universes, key, spaceOf, current, open, showRepo, act, addresses, browse, doctor, universeTerminal, webView } from "./data.js";
 
 // How often the list is read again: universes start and stop outside Herdr.
 const EVERY = 10000;
 const SPIN = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+// A universe: its repositories' gems in a ring, size px across, dim when it
+// does not run. A pair sits side by side; one alone fills it.
+function ring(u, size) {
+  const n = u.repos.length;
+  const box = div().relative().size(size).flex_none().opacity(u.state === "running" ? 1 : u.state === "partial" ? 0.8 : 0.45);
+  if (n === 0) return box;
+  if (n === 1) return box.child(image(gem(u, u.repos[0])).absolute().left(size * 0.1).top(size * 0.1).size(size * 0.8));
+  const s = Math.round(size * (n === 2 ? 0.52 : n <= 4 ? 0.46 : 0.4));
+  const r = (size - s) / 2;
+  const start = n === 2 ? Math.PI : -Math.PI / 2;
+  return box.children(u.repos.map((repo, i) => {
+    const a = start + (i * 2 * Math.PI) / n;
+    return image(gem(u, repo)).absolute().size(s)
+      .left(Math.round(size / 2 + r * Math.cos(a) - s / 2)).top(Math.round(size / 2 + r * Math.sin(a) - s / 2));
+  }));
+}
 
 export default class Universes extends View {
   init(_props, cx) {
@@ -148,11 +165,13 @@ export default class Universes extends View {
 
     return v_flex().mx(10).p(12).gap(10).rounded(10).bg(t.background).border(1).border_color(t.border)
       .child(h_flex().gap(8).items_center()
-        .child(div().text_size(16).text_color(tone(t, u.state)).child(ICON[u.state] ?? "◌"))
+        .child(ring(u, 30))
         .child(v_flex().flex_1().min_w(0)
           .child(div().font_semibold().truncate().child(u.name))
           .child(div().text_size(11).text_color(t.dim).truncate()
-            .child(`${u.multiverse} · ${u.state}${u.up ? ` · ${u.up} up` : ""}`))))
+            .child(h_flex().gap(4).items_center()
+              .child(div().text_color(tone(t, u.state)).child(ICON[u.state] ?? "◌"))
+              .child(`${u.multiverse} · ${u.state}${u.up ? ` · ${u.up} up` : ""}`)))))
       .when(Boolean(busy), (el) => el.child(h_flex().gap(6).text_size(12).text_color(t.working)
         .child(div().frames(SPIN, 90)).child(`${busy}…`)))
       .child(h_flex().flex_wrap().gap(6)
@@ -218,8 +237,8 @@ export default class Universes extends View {
       .child(v_flex().gap(1).children(rows));
   }
 
-  // A chip that opens a terminal, or goes to the one open: the terminal icon,
-  // the tab's name, and a tooltip saying which. Shown: accent; open: plain;
+  // A chip that opens a terminal, or goes to the one open: the universe's ring
+  // or the repository's gem, the tab's name, and a tooltip saying which. Shown: accent; open: plain;
   // not yet open: muted, with a dashed look of a thinner border.
   opener(t, u, id, name, activeTab, onClick, where) {
     const tab = spaceOf(u)?.tabs.find((x) => x.name === name);
@@ -232,7 +251,10 @@ export default class Universes extends View {
       .hover((s) => s.bg(shown ? t.accent : t.hover).text_color(shown ? t.accent_foreground : t.foreground))
       .tooltip(tab ? `Go to ${name === "universe" ? "the universe's" : `${name}'s`} terminal` : `Open a terminal in ${where}`)
       .on_click(onClick)
-      .child(svg("icons/shell.svg").size(12).text_color(fg))
+      // On the accent a gem sits on a light disc, or its colour is lost.
+      .child(name === "universe"
+        ? div().p(shown ? 1 : 0).rounded(9).when(shown, (el) => el.bg(t.background)).child(ring(u, 15))
+        : div().p(shown ? 1 : 0).rounded(7).when(shown, (el) => el.bg(t.background)).child(image(gem(u, name)).size(12)))
       .child(div().when(name === "universe", (el) => el.font_semibold()).child(name))
       .when(!tab, (el) => el.child(div().text_size(11).text_color(t.dim).child("+")));
   }
@@ -259,7 +281,7 @@ export default class Universes extends View {
       .when(shown, (el) => el.bg(t.selected))
       .hover((s) => s.bg(shown ? t.selected : t.hover))
       .on_click(() => { this.done(); open(u); })
-      .child(div().flex_none().text_color(tone(t, u.state)).child(ICON[u.state] ?? "◌"))
+      .child(ring(u, 20))
       .child(div().flex_1().truncate().text_color(space ? t.foreground : t.muted).child(u.name))
       .child(div().flex_none().text_size(11).text_color(t.dim).child(space ? "open" : u.up ?? ""));
     if (!space || this.panel) return row;
@@ -274,7 +296,7 @@ export default class Universes extends View {
           .hover((s) => s.text_color(t.foreground))
           .tooltip(space.tabs.some((x) => x.name === r) ? `Go to ${r}'s terminal` : `Open a terminal in ${r}`)
           .on_click(() => { this.done(); showRepo(u, r); })
-          .child(svg("icons/shell.svg").size(10))
+          .child(image(gem(u, r)).size(12).flex_none())
           .child(r)));
     return v_flex().child(row).child(repos);
   }

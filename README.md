@@ -22,7 +22,7 @@ Windows is out because multiversectl itself has no Windows build; inside WSL it 
 
 ## herdr app
 
-The **Universes** panel sits beside Files and Changes. Its **Web view** button opens multiversectl's web view (`multiversectl server open`, which starts it when needed). It lists every universe; click one to open it as a space named after it, with one terminal in the universe's folder. Inside a universe's space it shows the universe's state and services up, terminal openers for the universe and each repository (a terminal icon; `+` when it is not open yet), its addresses in two tabs, by name through the proxy or by IP and port (click to open; a dot says whether the service runs), and **Up**, **Down**, **Sync** and **Doctor**.
+The **Universes** panel sits beside Files and Changes. Its **Web view** button opens multiversectl's web view (`multiversectl server open`, which starts it when needed). It lists every universe, each marked with a ring of its repositories' gems (dim when stopped); click one to open it as a space named after it, with one terminal in the universe's folder. Inside a universe's space it shows the universe's state and services up, terminal openers for the universe (its ring) and each repository (the repository's gem; `+` when it is not open yet), its addresses in two tabs, by name through the proxy or by IP and port (click to open; a dot says whether the service runs), and **Up**, **Down**, **Sync** and **Doctor**.
 
 To add it, ask the agent in your herdr app to add the layout from this repository's `multiverse/` folder (it follows `multiverse/RECIPE.md`), or install it from [herdr.dev/layouts](https://herdr.dev/layouts/), or copy it yourself:
 
@@ -35,6 +35,10 @@ herdr-app do layout.switch '{"name":"multiverse"}'
 ```
 
 `ctrl-shift-l` switches back to your own layout.
+
+### Gems
+
+A repository is a gem whose colour is its place among its multiverse's repositories, sorted, so up to six never share one, and a repository has the same one in every universe and in multiversectl's web view; a universe is a ring of its repositories' gems. multiversectl draws the gems (`web/tools/gems.mjs`); `tools/sync-gems.sh` copies them here from its main branch (or from a checkout: `tools/sync-gems.sh ../multiversectl`), and CI checks they still match.
 
 ## herdr (terminal)
 

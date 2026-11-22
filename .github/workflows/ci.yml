@@ -29,8 +29,8 @@ jobs:
 
       - name: Scripts
         run: |
-          for f in build.sh run.sh; do sh -n "$f"; done
-          shellcheck --shell=sh build.sh run.sh
+          for f in build.sh run.sh tools/sync-gems.sh; do sh -n "$f"; done
+          shellcheck --shell=sh build.sh run.sh tools/sync-gems.sh
 
       # The herdr app layout: every file it names is here.
       - name: multiverse/ (the herdr app layout)
@@ -58,3 +58,5 @@ jobs:
               assert os.path.isfile(f"multiverse/{f}"), f"multiverse/{f} is missing"
           print("layout mods:", sorted(mods))
           PY
+      - name: The gems match multiversectl's
+        run: sh tools/sync-gems.sh --check
