@@ -24,5 +24,5 @@ done
 if [ -n "$check" ]; then
   diff -r "$tmp" "$dst" && echo "the gems match multiversectl's"
 else
-  rm -rf "$dst" && mkdir -p "$dst" && cp "$tmp"/*.svg "$dst"/ && echo "copied $(ls "$dst" | wc -l | tr -d ' ') gems into $dst"
+  rm -rf "$dst" && mkdir -p "$dst" && cp "$tmp"/*.svg "$dst"/ && echo "copied the gems into $dst"
 fi
