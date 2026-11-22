@@ -7,7 +7,7 @@ Herdr's main layout with a **Universes** side panel for [multiversectl](https://
 - Everything of Herdr's `main` layout, unchanged, plus a third side panel beside Files and Changes. Its button in the tab bar reads **Universes**, with an orbit icon (`mods/multiverse/universe.svg`, 16px, stroked in the text color).
 - The panel (368px, the side panel's width; `surface` background):
   - Header: `UNIVERSE` in 11px semibold `dim`, a ↻ refresh at the right (a braille spinner while reading).
-  - When the shown space is a universe's: a card (`background`, 1px `border`, 10px radius, 12px padding) with the state icon in the state's color, the universe's name (semibold), `<multiverse> · <state> · <up> up` (11px `dim`); a row of buttons that wraps, **▶ Up** (solid when the universe is not running), **■ Down**, **⟳ Sync**, **Doctor**, **› Terminal**; `REPOSITORIES` as chips, the shown tab's chip in `accent`; `ADDRESSES`, the universe's URLs without the scheme, in `accent`, one per line.
+  - When the shown space is a universe's: a card (`background`, 1px `border`, 10px radius, 12px padding) with the state icon in the state's color, the universe's name (semibold), `<multiverse> · <state> · <up> up` (11px `dim`); a row of buttons, **▶ Up** (solid when the universe is not running), **■ Down**, **⟳ Sync**, **Doctor**; `TERMINALS`, a wrapping row of terminal openers: `universe` (semibold) first, then each repository. Each opener is a 24px chip with Herdr's terminal icon (`icons/shell.svg`, 12px) and the tab's name: the shown tab's in `accent`, an open tab's `raised` with `foreground` text, one not open yet `surface` with `muted` text and a trailing `+`; `ADDRESSES`, the universe's URLs without the scheme, in `accent`, one per line.
   - Otherwise: "This space is in no universe. Open one below."
   - `ALL UNIVERSES`: grouped by multiverse (11px `dim` heading), one row per universe: state icon, name, and `open` when it has a space, else its services up (`6/9`). The shown universe's row is `selected`.
 - State icons: running ● (`done` color), partial ◐ (`working`), stopped ○ and created ◌ (`dim`).
@@ -17,9 +17,9 @@ Herdr's main layout with a **Universes** side panel for [multiversectl](https://
 **How it behaves**
 
 - Clicking a universe opens it as a space named after it with one tab, `universe`, whose terminal starts in the universe's folder (the parent of every repository's checkout). Repositories get tabs only from their chips. A universe that already has a space (a space *named* exactly after it) is shown instead. The picker closes after a click.
-- Clicking a repository chip shows that repository's tab, making it when it is missing.
+- Clicking a repository's opener shows that repository's tab, making it (a terminal in its checkout) when it is missing. Its tooltip says which: "Open a terminal in api" or "Go to api's terminal".
 - Up, Down and Sync run `multiversectl universe up|down|sync <universe> -m <multiverse>` (up to 10 minutes); while one runs the card shows a spinner and the verb, and the buttons are dimmed and inert. A toast says how it went (success, or error with multiversectl's message), then the list is read again.
-- Terminal shows the universe's own terminal: a tab named `universe` whose terminal starts in the universe's folder, the parent of every repository's checkout. One already open is shown instead.
+- The `universe` opener shows the universe's own terminal: a tab named `universe` whose terminal starts in the universe's folder, the parent of every repository's checkout. One already open is shown instead.
 - Doctor opens a tab named `doctor` in the universe's space running `multiversectl universe doctor`, which waits for enter before it closes.
 - An address opens in the browser (`xdg-open`, or `open` on macOS).
 - The list is read on start, every 10 seconds, and on ↻. The panel keeps Herdr's per-space memory: each space remembers whether its side panel was open and which one.

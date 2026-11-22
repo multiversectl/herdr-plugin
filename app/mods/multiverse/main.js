@@ -7,7 +7,7 @@
 // named after it with one terminal in the universe's folder; a repository's tab
 // opens from its chip. One already open is shown.
 
-import { View, div } from "gpui-kit";
+import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
 import { theme, checking, props, closeOverlay } from "herdr";
 import { ICON, tone, universes, key, spaceOf, current, open, showRepo, act, urls, browse, doctor, universeTerminal } from "./data.js";
@@ -137,17 +137,12 @@ export default class Universes extends View {
         .child(button("up", "▶ Up", (_e, cx) => this.run(cx, u, "up"), u.state !== "running"))
         .child(button("down", "■ Down", (_e, cx) => this.run(cx, u, "down")))
         .child(button("sync", "⟳ Sync", (_e, cx) => this.run(cx, u, "sync")))
-        .child(button("doctor", "Doctor", () => doctor(u)))
-        .child(button("terminal", "› Terminal", () => universeTerminal(u))))
+        .child(button("doctor", "Doctor", () => doctor(u))))
       .child(v_flex().gap(4)
-        .child(div().text_size(11).text_color(t.dim).child("REPOSITORIES"))
-        .child(h_flex().flex_wrap().gap(4).children(u.repos.map((r) =>
-          div().id(`mv-card-r-${r}`).px(7).py(2).rounded(5).text_size(12)
-            .bg(r === activeTab ? t.accent : t.raised)
-            .text_color(r === activeTab ? t.accent_foreground : t.muted)
-            .hover((s) => s.text_color(t.foreground))
-            .on_click(() => showRepo(u, r))
-            .child(r)))))
+        .child(div().text_size(11).text_color(t.dim).child("TERMINALS"))
+        .child(h_flex().flex_wrap().gap(4)
+          .child(this.opener(t, u, "universe", "universe", activeTab, () => universeTerminal(u), "the universe's folder"))
+          .children(u.repos.map((r) => this.opener(t, u, `r-${r}`, r, activeTab, () => showRepo(u, r), r)))))
       .child(v_flex().gap(2)
         .child(div().text_size(11).text_color(t.dim).child("ADDRESSES"))
         .children(links === null || links === undefined
@@ -159,6 +154,25 @@ export default class Universes extends View {
                 .hover((s) => s.underline())
                 .on_click(() => browse(url))
                 .child(url.replace(/^https?:\/\//, "")))));
+  }
+
+  // A chip that opens a terminal, or goes to the one open: the terminal icon,
+  // the tab's name, and a tooltip saying which. Shown: accent; open: plain;
+  // not yet open: muted, with a dashed look of a thinner border.
+  opener(t, u, id, name, activeTab, onClick, where) {
+    const tab = spaceOf(u)?.tabs.find((x) => x.name === name);
+    const shown = Boolean(tab) && name === activeTab;
+    const fg = shown ? t.accent_foreground : tab ? t.foreground : t.muted;
+    return h_flex().id(`mv-term-${id}`).h(24).px(7).gap(5).items_center().rounded(5).text_size(12)
+      .bg(shown ? t.accent : tab ? t.raised : t.surface)
+      .border(1).border_color(shown ? t.accent : t.border)
+      .text_color(fg)
+      .hover((s) => s.bg(shown ? t.accent : t.hover).text_color(shown ? t.accent_foreground : t.foreground))
+      .tooltip(tab ? `Go to ${name === "universe" ? "the universe's" : `${name}'s`} terminal` : `Open a terminal in ${where}`)
+      .on_click(onClick)
+      .child(svg("icons/shell.svg").size(12).text_color(fg))
+      .child(div().when(name === "universe", (el) => el.font_semibold()).child(name))
+      .when(!tab, (el) => el.child(div().text_size(11).text_color(t.dim).child("+")));
   }
 
   groups(t) {
@@ -192,11 +206,13 @@ export default class Universes extends View {
     const activeTab = space.tabs.find((x) => x.active)?.name;
     const repos = h_flex().flex_wrap().gap(4).ml(30).mr(10).mb(4).children(
       u.repos.map((r) =>
-        div().id(`mv-r-${k}-${r}`).px(6).py(1).rounded(4).text_size(11)
+        h_flex().id(`mv-r-${k}-${r}`).px(6).py(1).gap(4).items_center().rounded(4).text_size(11)
           .bg(shown && r === activeTab ? t.accent : t.raised)
           .text_color(shown && r === activeTab ? t.accent_foreground : t.muted)
           .hover((s) => s.text_color(t.foreground))
+          .tooltip(space.tabs.some((x) => x.name === r) ? `Go to ${r}'s terminal` : `Open a terminal in ${r}`)
           .on_click(() => { this.done(); showRepo(u, r); })
+          .child(svg("icons/shell.svg").size(10))
           .child(r)));
     return v_flex().child(row).child(repos);
   }
