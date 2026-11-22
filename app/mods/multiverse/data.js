@@ -106,6 +106,16 @@ export async function act(u, verb) {
   }
 }
 
+// multiversectl's web view: `server open` starts it when it is not running
+// and opens it in the browser.
+export async function webView() {
+  try {
+    await mvctl(["server", "open"], 60000);
+  } catch (e) {
+    notify({ title: "Web view did not open", body: String(e?.message ?? e).slice(0, 300), level: "error" });
+  }
+}
+
 export async function urls(u) {
   const out = await mvctl(["universe", "urls", u.name, "-m", u.multiverse]);
   return out.split("\n").map((l) => l.trim()).filter((l) => /^https?:\/\//.test(l));

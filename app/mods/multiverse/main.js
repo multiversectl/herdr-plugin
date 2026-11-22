@@ -10,7 +10,7 @@
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
 import { theme, checking, props, closeOverlay } from "herdr";
-import { ICON, tone, universes, key, spaceOf, current, open, showRepo, act, urls, browse, doctor, universeTerminal } from "./data.js";
+import { ICON, tone, universes, key, spaceOf, current, open, showRepo, act, urls, browse, doctor, universeTerminal, webView } from "./data.js";
 
 // How often the list is read again: universes start and stop outside Herdr.
 const EVERY = 10000;
@@ -62,6 +62,17 @@ export default class Universes extends View {
     });
   }
 
+  openWeb(cx) {
+    if (this.webBusy) return;
+    this.webBusy = true;
+    cx.notify();
+    cx.spawn(async (cx) => {
+      await webView();
+      this.webBusy = false;
+      cx.notify();
+    });
+  }
+
   loadLinks(cx, u) {
     const k = key(u);
     if (k in this.links) return;
@@ -81,10 +92,19 @@ export default class Universes extends View {
     const title = (text) => div().text_size(11).font_semibold().text_color(t.dim).child(text);
     const header = h_flex().px(12).pt(12).pb(6).justify_between().items_center()
       .child(title(this.panel ? "UNIVERSE" : "UNIVERSES"))
-      .child(div().id("mv-refresh").text_size(12).text_color(t.dim).px(6).rounded(4)
-        .hover((s) => s.bg(t.hover).text_color(t.foreground))
-        .on_click((_e, cx) => this.refresh(cx))
-        .child(this.reading ? div().frames(SPIN, 90) : "↻"));
+      .child(h_flex().gap(4).items_center()
+        .child(h_flex().id("mv-web").h(22).px(7).gap(5).items_center().rounded(5).text_size(12)
+          .text_color(t.muted).border(1).border_color(t.border)
+          .hover((s) => s.bg(t.hover).text_color(t.foreground))
+          .tooltip("Open multiversectl's web view (multiversectl server open)")
+          .on_click((_e, cx) => this.openWeb(cx))
+          .child(this.webBusy ? div().frames(SPIN, 90) : svg("mods/multiverse/web.svg").size(12))
+          .child("Web view"))
+        .child(div().id("mv-refresh").text_size(12).text_color(t.dim).px(6).rounded(4)
+          .hover((s) => s.bg(t.hover).text_color(t.foreground))
+          .tooltip("Read the universes again")
+          .on_click((_e, cx) => this.refresh(cx))
+          .child(this.reading ? div().frames(SPIN, 90) : "↻")));
 
     let body;
     if (this.error) {

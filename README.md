@@ -13,7 +13,7 @@ Both need `multiversectl` on `PATH`.
 
 ## herdr app
 
-The **Universes** panel sits beside Files and Changes. It lists every universe; click one to open it as a space named after it, with one terminal in the universe's folder. Inside a universe's space it shows the universe's state and services up, terminal openers for the universe and each repository (a terminal icon; `+` when it is not open yet), its addresses (click to open), and **Up**, **Down**, **Sync** and **Doctor**.
+The **Universes** panel sits beside Files and Changes. Its **Web view** button opens multiversectl's web view (`multiversectl server open`, which starts it when needed). It lists every universe; click one to open it as a space named after it, with one terminal in the universe's folder. Inside a universe's space it shows the universe's state and services up, terminal openers for the universe and each repository (a terminal icon; `+` when it is not open yet), its addresses (click to open), and **Up**, **Down**, **Sync** and **Doctor**.
 
 To add it, ask the agent in your herdr app to add the layout from this repository's `app/` folder (it follows `app/RECIPE.md`), or copy it yourself:
 
