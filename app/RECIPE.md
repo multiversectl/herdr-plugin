@@ -7,7 +7,7 @@ Herdr's main layout with a **Universes** side panel for [multiversectl](https://
 - Everything of Herdr's `main` layout, unchanged, plus a third side panel beside Files and Changes. Its button in the tab bar reads **Universes**, with an orbit icon (`mods/multiverse/universe.svg`, 16px, stroked in the text color).
 - The panel (368px, the side panel's width; `surface` background):
   - Header: `UNIVERSE` in 11px semibold `dim`; at the right a **Web view** button (22px, 1px `border`, a globe icon `mods/multiverse/web.svg`, 12px) and a ↻ refresh (each a braille spinner while busy).
-  - When the shown space is a universe's: a card (`background`, 1px `border`, 10px radius, 12px padding) with the state icon in the state's color, the universe's name (semibold), `<multiverse> · <state> · <up> up` (11px `dim`); a row of buttons, **▶ Up** (solid when the universe is not running), **■ Down**, **⟳ Sync**, **Doctor**; `TERMINALS`, a wrapping row of terminal openers: `universe` (semibold) first, then each repository. Each opener is a 24px chip with Herdr's terminal icon (`icons/shell.svg`, 12px) and the tab's name: the shown tab's in `accent`, an open tab's `raised` with `foreground` text, one not open yet `surface` with `muted` text and a trailing `+`; `ADDRESSES`, the universe's URLs without the scheme, in `accent`, one per line.
+  - When the shown space is a universe's: a card (`background`, 1px `border`, 10px radius, 12px padding) with the state icon in the state's color, the universe's name (semibold), `<multiverse> · <state> · <up> up` (11px `dim`); a row of buttons, **▶ Up** (solid when the universe is not running), **■ Down**, **⟳ Sync**, **Doctor**; `TERMINALS`, a wrapping row of terminal openers: `universe` (semibold) first, then each repository. Each opener is a 24px chip with Herdr's terminal icon (`icons/shell.svg`, 12px) and the tab's name: the shown tab's in `accent`, an open tab's `raised` with `foreground` text, one not open yet `surface` with `muted` text and a trailing `+`; `ADDRESSES`, with two tabs at its right in a `raised` segmented control, **By name** (through multiversectl's proxy) and **By IP** (a forwarded port on this machine's address, which other devices on the network reach too), each with its count; under them a line saying what the shown tab is (or why it is empty), then one row per address: a 6px dot (`done` when its service runs, else `dim`), the host (semibold) with `app · service` in `dim`, and the URL without the scheme in `accent` (`dim` when the service is not running).
   - Otherwise: "This space is in no universe. Open one below."
   - `ALL UNIVERSES`: grouped by multiverse (11px `dim` heading), one row per universe: state icon, name, and `open` when it has a space, else its services up (`6/9`). The shown universe's row is `selected`.
 - State icons: running ● (`done` color), partial ◐ (`working`), stopped ○ and created ◌ (`dim`).
@@ -22,6 +22,7 @@ Herdr's main layout with a **Universes** side panel for [multiversectl](https://
 - The `universe` opener shows the universe's own terminal: a tab named `universe` whose terminal starts in the universe's folder, the parent of every repository's checkout. One already open is shown instead.
 - Doctor opens a tab named `doctor` in the universe's space running `multiversectl universe doctor`, which waits for enter before it closes.
 - Web view runs `multiversectl server open`, which starts the web view when it is not running and opens it in the browser; an error shows as a toast.
+- The addresses come from `multiversectl universe ls <universe> -o json,wide -m <multiverse>` (each app's `urls`: host, service, url; each service's `state`). One whose host is an IP literal is By IP, any other By name. They are read when the card shows and again when the universe's state or services up change, or on ↻. The tab shown is the one last picked, else the first with addresses.
 - An address opens in the browser (`xdg-open`, or `open` on macOS).
 - The list is read on start, every 10 seconds, and on ↻. The panel keeps Herdr's per-space memory: each space remembers whether its side panel was open and which one.
 
@@ -32,7 +33,7 @@ Herdr's main layout with a **Universes** side panel for [multiversectl](https://
 - `mods/multiverse-new-menu`: a clone of `new-menu` with one more row, `universe-open`, opening `{ mod: "multiverse", kind: "dialog", width: 380, height: 480 }`; its height formula grows by one row (31px).
 - `mods/multiverse`: `main.js` (the view: panel when `props().panel`, else the list; closes its overlay after acting), `data.js` (reading and acting), `universe.svg`, `web.svg`. `mod.json`: `{ "place": "none", "title": "Universes", "overlay": { "width": 360, "height": 520 } }`.
 - `herdr` functions: `exec`, `spaces`, `panes`, `focused`, `run` (`space.new {name, folder, tab, machine: ""}`, `space.select`, `tab.select`, `tab.new {name, space, folder}` for a repository's tab and the universe terminal, with `argv` for Doctor), `notify`, `theme`, `props`, `closeOverlay`, `window`, `checking`.
-- Programs it runs: `multiversectl status -o json`, `multiversectl universe ls -o json -m <multiverse>` (for each universe: `name`, `state`, `up`, `dir`, `checkout` {repo: path}, `branch`), `multiversectl universe up|down|sync|urls|doctor <universe> -m <multiverse>`, `multiversectl server open`, `xdg-open`/`open`.
+- Programs it runs: `multiversectl status -o json`, `multiversectl universe ls -o json -m <multiverse>` (for each universe: `name`, `state`, `up`, `dir`, `checkout` {repo: path}, `branch`), `multiversectl universe ls <universe> -o json,wide -m <multiverse>`, `multiversectl universe up|down|sync|doctor <universe> -m <multiverse>`, `multiversectl server open`, `xdg-open`/`open`.
 - `keys.json`: `"alt-u": "mod.open:multiverse"` in `global`.
 
 **Watch out**
@@ -42,6 +43,7 @@ Herdr's main layout with a **Universes** side panel for [multiversectl](https://
 - `space.new` shows the new space at once, so the following `tab.new`s (no `space`) land in it; pass `machine: ""` or a space opened from a remote space's click lands on that machine.
 - A space is a universe's only when it is *named* exactly after it; renaming the space makes the next click open a second one.
 - `herdr-app check` renders the first frame only, before the list is read: open the panel inside a universe's space to see the card.
+- Don't take the addresses from `universe urls`: up to multiversectl 0.0.109 it prints the proxy hostname even of a host with `portForward: only`, which answers 404 there.
 - It needs `multiversectl` on the app's `PATH` (exec runs with the user's real environment).
 
 **Done when**
