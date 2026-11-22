@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The manifest herdr reads: it parses, and has what herdr requires.
+      - name: herdr-plugin.toml
+        run: |
+          python3 - <<'PY'
+          import tomllib
+          m = tomllib.load(open("herdr-plugin.toml", "rb"))
+          missing = [k for k in ("id", "name", "version", "min_herdr_version") if not m.get(k)]
+          assert not missing, f"herdr-plugin.toml lacks {missing}"
+          for a in m.get("actions", []) + m.get("panes", []) + m.get("events", []) + m.get("startup", []) + m.get("build", []):
+              assert isinstance(a.get("command"), list) and a["command"], f"no command: {a}"
+          print(m["id"], m["version"], "ok")
+          PY
+
+      - name: Scripts
+        run: |
+          for f in build.sh run.sh; do sh -n "$f"; done
+          shellcheck --shell=sh build.sh run.sh
+
+      # The herdr app layout: every file it names is here.
+      - name: app/
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          layout = json.load(open("app/layouts/multiverse.json"))
+          mods = set()
+          def walk(n):
+              c = n.get("content") or {}
+              if "mod" in c: mods.add(c["mod"])
+              for k in n.get("children") or []: walk(k)
+          walk(layout)
+          shipped = {"workspace-chrome", "spaces", "agents", "files", "changes", "workspace-status"}
+          for m in mods - shipped:
+              assert os.path.isfile(f"app/mods/{m}/main.js"), f"layout names mods/{m}, which is not in app/mods"
+          for root, _, files in os.walk("app/mods"):
+              for f in files:
+                  if f.endswith(".js"):
+                      for ref in re.findall(r'"(mods/multiverse[^"]*\.svg)"', open(os.path.join(root, f)).read()):
+                          assert os.path.isfile(f"app/{ref}"), f"{f} uses {ref}, which is missing"
+          json.load(open("app/keys.json"))
+          print("layout mods:", sorted(mods))
+          PY
