@@ -7,20 +7,29 @@ herdr comes as two programs, and this repository has a piece for each:
 | | herdr app (desktop) | herdr (terminal) |
 |---|---|---|
 | What | a layout: a **Universes** side panel, **Open universe…** in the + menu, `alt-u` | a plugin: sidebar labels, a picker and a status popup |
-| Where | [`app/`](app/) | the repository root (`herdr-plugin.toml`) |
+| Where | [`multiverse/`](multiverse/) | the repository root (`herdr-plugin.toml`) |
 
 Both need `multiversectl` on `PATH`.
+
+### Platforms
+
+| | Linux | macOS | Windows |
+|---|---|---|---|
+| herdr app layout | yes (x86_64, arm64) | yes (Apple silicon, as the herdr app) | no |
+| herdr terminal plugin | yes (amd64, arm64) | yes (Intel, Apple silicon) | no |
+
+Windows is out because multiversectl itself has no Windows build; inside WSL it is Linux, and both work there. `multiversectl-herdr` is a static binary, so any distribution runs it, glibc or musl; installing needs `sh`, `curl` or `wget`, and `sha256sum` or `shasum`. On Linux the panel opens addresses with `xdg-open`, else `gio open`, else `sensible-browser`.
 
 ## herdr app
 
 The **Universes** panel sits beside Files and Changes. Its **Web view** button opens multiversectl's web view (`multiversectl server open`, which starts it when needed). It lists every universe; click one to open it as a space named after it, with one terminal in the universe's folder. Inside a universe's space it shows the universe's state and services up, terminal openers for the universe and each repository (a terminal icon; `+` when it is not open yet), its addresses in two tabs, by name through the proxy or by IP and port (click to open; a dot says whether the service runs), and **Up**, **Down**, **Sync** and **Doctor**.
 
-To add it, ask the agent in your herdr app to add the layout from this repository's `app/` folder (it follows `app/RECIPE.md`), or copy it yourself:
+To add it, ask the agent in your herdr app to add the layout from this repository's `multiverse/` folder (it follows `multiverse/RECIPE.md`), or install it from [herdr.dev/layouts](https://herdr.dev/layouts/), or copy it yourself:
 
 ```sh
 git clone https://github.com/multiversectl/herdr-plugin
-cp herdr-plugin/app/layouts/multiverse.json ~/.config/herdr-app/layouts/
-cp -R herdr-plugin/app/mods/* ~/.config/herdr-app/mods/
+cp herdr-plugin/multiverse/layouts/multiverse.json ~/.config/herdr-app/layouts/
+cp -R herdr-plugin/multiverse/mods/* ~/.config/herdr-app/mods/
 # add "alt-u": "mod.open:multiverse" to "global" in ~/.config/herdr-app/keys.json
 herdr-app do layout.switch '{"name":"multiverse"}'
 ```

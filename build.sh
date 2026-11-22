@@ -26,8 +26,20 @@ mkdir -p bin
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-curl -fsSL --retry 3 "$base/$name" -o "$tmp/$name"
-curl -fsSL --retry 3 "$base/checksums.txt" -o "$tmp/checksums.txt"
+# curl, else wget: minimal images ship one or the other.
+fetch() {
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL --retry 3 "$1" -o "$2"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q -O "$2" "$1"
+  else
+    echo "needs curl or wget to download multiversectl-herdr" >&2
+    exit 1
+  fi
+}
+
+fetch "$base/$name" "$tmp/$name"
+fetch "$base/checksums.txt" "$tmp/checksums.txt"
 
 want=$(awk -v n="$name" '$2 == n { print $1 }' "$tmp/checksums.txt")
 if [ -z "$want" ]; then

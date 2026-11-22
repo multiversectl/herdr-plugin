@@ -148,9 +148,21 @@ function byIP(url) {
   return /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.startsWith("[");
 }
 
-export function browse(url) {
-  const opener = window()?.platform === "macos" ? "open" : "xdg-open";
-  exec(opener, [url]).catch(() => {});
+// Opens a URL in the browser: `open` on macOS; on Linux the first opener
+// the desktop has (xdg-utils, GLib, Debian's alternatives).
+export async function browse(url) {
+  const openers = window()?.platform === "macos"
+    ? [["open", [url]]]
+    : [["xdg-open", [url]], ["gio", ["open", url]], ["sensible-browser", [url]]];
+  for (const [cmd, args] of openers) {
+    try {
+      const r = await exec(cmd, args, { timeout: 10000 });
+      if (r.code === 0) return;
+    } catch {
+      // not installed: try the next one
+    }
+  }
+  notify({ title: "No browser opener", body: `Open ${url} yourself: none of xdg-open, gio or sensible-browser worked.`, level: "warning" });
 }
 
 // A check reads best in a terminal: a tab in the universe's space that
