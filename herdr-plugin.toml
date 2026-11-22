@@ -1,0 +1,63 @@
+id = "multiversectl"
+name = "multiversectl"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+description = "Shows which multiversectl universe each agent and workspace runs in, and opens universe status in a popup."
+platforms = ["linux", "macos"]
+
+# Fetch multiversectl-herdr from the latest multiversectl release, checked
+# against its checksums. One already on PATH is used instead when present.
+[[build]]
+command = ["sh", "build.sh"]
+
+# Label every pane and workspace once the server is up.
+[[startup]]
+command = ["sh", "run.sh", "sync"]
+
+# Relabel when panes appear, take focus or start an agent, and when workspaces change.
+[[events]]
+on = "pane.created"
+command = ["sh", "run.sh", "sync"]
+
+[[events]]
+on = "pane.focused"
+command = ["sh", "run.sh", "sync"]
+
+[[events]]
+on = "pane.agent_detected"
+command = ["sh", "run.sh", "sync"]
+
+[[events]]
+on = "workspace.created"
+command = ["sh", "run.sh", "sync"]
+
+[[events]]
+on = "workspace.updated"
+command = ["sh", "run.sh", "sync"]
+
+[[events]]
+on = "worktree.created"
+command = ["sh", "run.sh", "sync"]
+
+[[actions]]
+id = "status"
+title = "multiversectl: universe status"
+command = ["sh", "-c", "exec \"$HERDR_BIN_PATH\" plugin pane open --plugin multiversectl --entrypoint status"]
+
+[[actions]]
+id = "sync"
+title = "multiversectl: relabel panes and workspaces"
+command = ["sh", "run.sh", "sync"]
+
+[[actions]]
+id = "debug"
+title = "multiversectl: dump plugin context (for development)"
+command = ["sh", "run.sh", "debug"]
+
+[[panes]]
+id = "status"
+title = "multiverse status"
+placement = "popup"
+width = "80%"
+height = "70%"
+command = ["sh", "run.sh", "popup"]
