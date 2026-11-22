@@ -14,9 +14,23 @@ const GEMS = ["red", "blue", "yellow", "green", "purple", "orange"];
 export const RING = "mods/multiverse/gems/ring.svg";
 export function gemOf(name) {
   let h = 0x811c9dc5;
-  for (const ch of new TextEncoder().encode(name)) h = Math.imul(h ^ ch, 0x01000193) >>> 0;
+  for (const b of utf8(name)) h = Math.imul(h ^ b, 0x01000193) >>> 0;
   return `mods/multiverse/gems/${GEMS[h % GEMS.length]}.svg`;
 }
+// The UTF-8 bytes of s, as the web view's TextEncoder gives them (herdr's
+// scripts have no TextEncoder).
+function utf8(s) {
+  const out = [];
+  for (const ch of s) {
+    const c = ch.codePointAt(0);
+    if (c < 0x80) out.push(c);
+    else if (c < 0x800) out.push(0xc0 | (c >> 6), 0x80 | (c & 63));
+    else if (c < 0x10000) out.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+    else out.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 63), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+  }
+  return out;
+}
+
 // How bright a universe's ring shows: lit when it runs, dim when it does not.
 export function glow(state) {
   return state === "running" ? 1 : state === "partial" ? 0.75 : 0.4;
