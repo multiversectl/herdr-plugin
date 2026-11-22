@@ -2,7 +2,7 @@ id = "multiversectl"
 name = "multiversectl"
 version = "0.1.0"
 min_herdr_version = "0.9.0"
-description = "Shows which multiversectl universe each agent and workspace runs in, and opens universe status in a popup."
+description = "Opens each multiversectl universe as a herdr workspace with a tab per repository, labels agents with their universe and repository, and shows universe status."
 platforms = ["linux", "macos"]
 
 # Fetch multiversectl-herdr from the latest multiversectl release, checked
@@ -40,6 +40,16 @@ on = "worktree.created"
 command = ["sh", "run.sh", "sync"]
 
 [[actions]]
+id = "open"
+title = "multiversectl: open a universe (a workspace, a tab per repository)"
+command = ["sh", "-c", "exec \"$HERDR_BIN_PATH\" plugin pane open --plugin multiversectl --entrypoint pick"]
+
+[[actions]]
+id = "open-all"
+title = "multiversectl: open every universe"
+command = ["sh", "run.sh", "open", "--all"]
+
+[[actions]]
 id = "status"
 title = "multiversectl: universe status"
 command = ["sh", "-c", "exec \"$HERDR_BIN_PATH\" plugin pane open --plugin multiversectl --entrypoint status"]
@@ -61,3 +71,11 @@ placement = "popup"
 width = "80%"
 height = "70%"
 command = ["sh", "run.sh", "popup"]
+
+[[panes]]
+id = "pick"
+title = "open a universe"
+placement = "popup"
+width = "80%"
+height = "60%"
+command = ["sh", "run.sh", "pick"]
