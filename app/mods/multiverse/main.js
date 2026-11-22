@@ -2,9 +2,10 @@
 //
 // As a side panel (props { panel: true }, beside Files and Changes): the
 // universe you are in, with its state, repositories, addresses and controls
-// (up, down, sync, doctor), then every universe. As a popup (mod.open, alt-u):
-// the list alone. Clicking a universe opens it as a space named after it, a tab
-// per repository in its checkout; one already open is shown.
+// (up, down, sync, doctor, terminal), then every universe. As a popup
+// (mod.open, alt-u): the list alone. Clicking a universe opens it as a space
+// named after it with one terminal in the universe's folder; a repository's tab
+// opens from its chip. One already open is shown.
 
 import { View, div } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";

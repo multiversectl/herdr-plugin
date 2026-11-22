@@ -60,18 +60,17 @@ export function current(list) {
   return list.find((u) => within(cwd, u.dir)) ?? null;
 }
 
-// Opens a universe as a space named after it, a tab per repository in its
-// checkout; one already open is shown.
+// Opens a universe as a space named after it, with one terminal: the
+// universe's own, in its folder (the parent of every repository's checkout).
+// Repositories get their tabs when asked for (showRepo). One already open is
+// shown.
 export function open(u) {
   const s = spaceOf(u);
   if (s) {
     run("space.select", { id: s.id });
     return;
   }
-  const [first, ...rest] = u.repos;
-  run("space.new", { name: u.name, folder: first ? u.checkout[first] : u.dir, tab: first, machine: "" });
-  // A new space is shown at once, so its tabs go to it.
-  for (const r of rest) run("tab.new", { name: r, folder: u.checkout[r], focus: false });
+  run("space.new", { name: u.name, folder: u.dir, tab: "universe", machine: "" });
 }
 
 // Shows a repository's tab in the universe's space, opening what is missing.

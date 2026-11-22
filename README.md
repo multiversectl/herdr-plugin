@@ -1,6 +1,6 @@
 # multiversectl for herdr
 
-Work in [multiversectl](https://multiversectl.dev) universes from [herdr](https://herdr.dev): each universe is a space (a workspace) with a terminal per repository, opened in that repository's checkout.
+Work in [multiversectl](https://multiversectl.dev) universes from [herdr](https://herdr.dev): each universe is a space (a workspace) whose terminal starts in the universe's folder, the parent of its repositories' checkouts; each repository gets its own tab when you ask for it.
 
 herdr comes as two programs, and this repository has a piece for each:
 
@@ -13,7 +13,7 @@ Both need `multiversectl` on `PATH`.
 
 ## herdr app
 
-The **Universes** panel sits beside Files and Changes. It lists every universe; click one to open it as a space named after it, a tab per repository. Inside a universe's space it shows the universe's state and services up, its repositories (click to go to that tab), its addresses (click to open), **Up**, **Down**, **Sync** and **Doctor**, and **Terminal**: a terminal in the universe's own folder, the parent of its repositories.
+The **Universes** panel sits beside Files and Changes. It lists every universe; click one to open it as a space named after it, with one terminal in the universe's folder. Inside a universe's space it shows the universe's state and services up, its repositories (click one to open or go to its tab), its addresses (click to open), **Up**, **Down**, **Sync** and **Doctor**, and **Terminal**: back to the universe's own terminal.
 
 To add it, ask the agent in your herdr app to add the layout from this repository's `app/` folder (it follows `app/RECIPE.md`), or copy it yourself:
 
@@ -37,7 +37,7 @@ Installing fetches `multiversectl-herdr`, the small binary that does the work, f
 
 ### Open a universe
 
-The `multiversectl.open` action shows a picker of every universe; choosing one opens it as a workspace named after it, a tab per repository. One already open is focused. `multiversectl.open-all` opens them all. Bind the picker in `~/.config/herdr/config.toml`:
+The `multiversectl.open` action shows a picker of every universe; choosing one opens it as a workspace named after it, with one tab, `universe`, in the universe's folder. One already open is focused. `multiversectl.open-all` opens them all. Bind the picker in `~/.config/herdr/config.toml`:
 
 ```toml
 [[keys.command]]

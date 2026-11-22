@@ -1,6 +1,6 @@
 # Multiverse
 
-Herdr's main layout with a **Universes** side panel for [multiversectl](https://multiversectl.dev): every universe on this machine, each opened as its own space with a tab per repository, and the universe you are in with its state, repositories, addresses and controls. The + menu gains **Open universe…** and `alt-u` opens a universe picker anywhere.
+Herdr's main layout with a **Universes** side panel for [multiversectl](https://multiversectl.dev): every universe on this machine, each opened as its own space whose terminal starts in the universe's folder, and the universe you are in with its state, repositories, addresses and controls. The + menu gains **Open universe…** and `alt-u` opens a universe picker anywhere.
 
 **What you see**
 
@@ -16,7 +16,7 @@ Herdr's main layout with a **Universes** side panel for [multiversectl](https://
 
 **How it behaves**
 
-- Clicking a universe opens it as a space named after it, with a tab per repository (sorted by name) whose terminal starts in that repository's checkout; the first repository is the space's first tab. A universe that already has a space (a space *named* exactly after it) is shown instead. The picker closes after a click.
+- Clicking a universe opens it as a space named after it with one tab, `universe`, whose terminal starts in the universe's folder (the parent of every repository's checkout). Repositories get tabs only from their chips. A universe that already has a space (a space *named* exactly after it) is shown instead. The picker closes after a click.
 - Clicking a repository chip shows that repository's tab, making it when it is missing.
 - Up, Down and Sync run `multiversectl universe up|down|sync <universe> -m <multiverse>` (up to 10 minutes); while one runs the card shows a spinner and the verb, and the buttons are dimmed and inert. A toast says how it went (success, or error with multiversectl's message), then the list is read again.
 - Terminal shows the universe's own terminal: a tab named `universe` whose terminal starts in the universe's folder, the parent of every repository's checkout. One already open is shown instead.
@@ -30,7 +30,7 @@ Herdr's main layout with a **Universes** side panel for [multiversectl](https://
 - `mods/multiverse-tabs`: a clone of `tabs` (`mod.clone`). Its panel list is `[...(shared("workspace.panels") ?? ["files", "changes"]), "universes"]`, so the space-switch memory keeps the Universes panel; it adds `panelButton("universes", "Universes", "mods/multiverse/universe.svg")` after Changes; + opens `multiverse-new-menu` (popup, 250×548).
 - `mods/multiverse-new-menu`: a clone of `new-menu` with one more row, `universe-open`, opening `{ mod: "multiverse", kind: "dialog", width: 380, height: 480 }`; its height formula grows by one row (31px).
 - `mods/multiverse`: `main.js` (the view: panel when `props().panel`, else the list; closes its overlay after acting), `data.js` (reading and acting), `universe.svg`. `mod.json`: `{ "place": "none", "title": "Universes", "overlay": { "width": 360, "height": 520 } }`.
-- `herdr` functions: `exec`, `spaces`, `panes`, `focused`, `run` (`space.new {name, folder, tab, machine: ""}`, `tab.new {name, folder, focus: false}`, `space.select`, `tab.select`, `tab.new {name, space, folder, argv}` for Doctor), `notify`, `theme`, `props`, `closeOverlay`, `window`, `checking`.
+- `herdr` functions: `exec`, `spaces`, `panes`, `focused`, `run` (`space.new {name, folder, tab, machine: ""}`, `space.select`, `tab.select`, `tab.new {name, space, folder}` for a repository's tab and the universe terminal, with `argv` for Doctor), `notify`, `theme`, `props`, `closeOverlay`, `window`, `checking`.
 - Programs it runs: `multiversectl status -o json`, `multiversectl universe ls -o json -m <multiverse>` (for each universe: `name`, `state`, `up`, `dir`, `checkout` {repo: path}, `branch`), `multiversectl universe up|down|sync|urls|doctor <universe> -m <multiverse>`, `xdg-open`/`open`.
 - `keys.json`: `"alt-u": "mod.open:multiverse"` in `global`.
 
@@ -47,6 +47,6 @@ Herdr's main layout with a **Universes** side panel for [multiversectl](https://
 
 - `herdr-app check` passes for `multiverse`, `multiverse-tabs` and `multiverse-new-menu`, and `herdr-app status` shows no errors on the `multiverse` layout.
 - The tab bar shows Universes after Changes; clicking it opens the panel, clicking again hides it.
-- Clicking a universe makes one space named after it with a tab per repository, each terminal's folder that repository's checkout; clicking it again shows that space and makes nothing new.
+- Clicking a universe makes one space named after it with one tab, `universe`, in the universe's folder; a repository chip adds that repository's tab in its checkout; clicking it again shows that space and makes nothing new.
 - Inside that space the card shows the universe, its state, its repositories with the shown tab marked, and its addresses; Down then Up changes the state shown after the toast.
 - The + menu ends with Open universe…; `alt-u` opens the picker.
